@@ -66,10 +66,12 @@ export default function Signup() {
 
       const response = await AuthService.signup(name, email, password, setErrors)
 
-      if (response.status != 200) {
-        console.log(response.response)
+      if (!response?.success) {
+        throw new Error("Error signing up.")
       }
 
+      sessionStorage.setItem("access_token", response.data.access_token)
+      sessionStorage.setItem("token_type", response.data.token_type)
       navigate("/home")
     } catch (error) {
       console.log(error.response)

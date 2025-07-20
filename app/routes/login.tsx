@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { NavLink } from "react-router"
+import { NavLink, useNavigate } from "react-router"
+import * as AuthService from "~/services/authService"
 
 type FormError = {
   email?: string,
@@ -11,6 +12,8 @@ export default function Login() {
   const [password, setPass] = useState<string>("")
 
   const [errors, setErrors] = useState<FormError>({})
+
+  let navigate = useNavigate()
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setEmail(e.target.value)
@@ -39,25 +42,45 @@ export default function Login() {
   }
 
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validationErrors = validateForm();
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
       return
     }
     setErrors({})
+
+    try {
+      if (!csrfTokenFetched) {
+        await AuthService.getcsrf()
+        setCsrfTokenFetched(true); // Mark CSRF token as fetched
+      }
+      const validationErrors = validateForm();
+      const response = await AuthService.login(email, password, setErrors)
+
+      if (!response?.success) {
+        throw new Error("Error logging in.")
+      }
+
+      sessionStorage.setItem("access_token", response.data.access_token)
+      sessionStorage.setItem("token_type", response.data.token_type)
+
+      navigate("/home")
+
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
     <>
       {/* PAGE CONTAINER */}
-      <div className="bg-gray-500 h-screen w-screen flex items-center justify-center">
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-500">
 
         {/* LOGIN CONTAINER */}
-        <div className="bg-gray-300 w-[350px] px-5 py-5 rounded-md drop-shadow-2xl">
+        <div className="w-[350px] rounded-md bg-gray-300 px-5 py-5 drop-shadow-2xl">
 
           {/* FORM FIELDS */}
           <div>
@@ -67,8 +90,8 @@ export default function Login() {
                 Email
               </div>
               <div className="mb-3">
-                <input type="email" onChange={handleEmailChange} className="w-full bg-white px-2 py-2 rounded-lg" />
-                {errors.email && <div className="text-red-500 text-sm mt-2">{errors.email}</div>}
+                <input type="email" onChange={handleEmailChange} className="w-full rounded-lg bg-white px-2 py-2" />
+                {errors.email && <div className="mt-2 text-sm text-red-500">{errors.email}</div>}
               </div>
             </div>
             {/* PASSWORD */}
@@ -77,24 +100,26 @@ export default function Login() {
                 Password
               </div>
               <div className="mb-3">
-                <input type="password" onChange={handlePasswordChange} className="w-full bg-white px-2 py-2 rounded-lg" />
-                {errors.pass && <div className="text-red-500 text-sm mt-2">{errors.pass}</div>}
+                <input type="password" onChange={handlePasswordChange} className="w-full rounded-lg bg-white px-2 py-2" />
+                {errors.pass && <div className="mt-2 text-sm text-red-500">{errors.pass}</div>}
               </div>
             </div>
           </div>
 
           {/* Login */}
-          <div className="flex flex-row-reverse mt-5">
-            <button type="button" onClick={handleLogin} className="bg-green-500 px-1 py-2 rounded-lg cursor-pointer w-full text-white font-bold">Sign Up</button>
+          <div className="mt-5 flex flex-row-reverse">
+            <button type="button" onClick={handleLogin} className="w-full cursor-pointer rounded-lg bg-green-500 px-1 py-2 font-bold text-white">
+              Log In
+            </button>
           </div>
 
           {/* TO SIGN UP */}
-          <div className="flex flex-row justify-center text-sm font-light mt-5">
+          <div className="mt-5 flex flex-row justify-center text-sm font-light">
             <div className="mr-2">
               Don't have an account?
             </div>
             <NavLink to="/signup">
-              <div className="text-blue-500 flex justify-end items-center">
+              <div className="flex items-center justify-end text-blue-500">
                 Sign up
               </div>
             </NavLink>
