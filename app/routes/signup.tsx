@@ -12,7 +12,7 @@ export default function Signup() {
   const [name, setName] = useState<string>("")
   const [email, setEmail] = useState<string>("")
   const [password, setPass] = useState<string>("")
-
+  const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormError>({})
 
   let navigate = useNavigate()
@@ -27,10 +27,8 @@ export default function Signup() {
     setPass(e.target.value)
   }
 
-  const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
-
-  const validateForm = () => {
-    const validationErrors: { name?: string, email?: string, pass?: string } = {}
+  const validateForm = (): FormError => {
+    const validationErrors: FormError = {}
 
     if (!name) validationErrors.name = "Full Name is required."
     if (!email) {
@@ -50,7 +48,7 @@ export default function Signup() {
   const handleRegistration = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
-    const validationErrors = validateForm();
+    const validationErrors: FormError = validateForm();
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors)
@@ -61,23 +59,23 @@ export default function Signup() {
     try {
       if (!csrfTokenFetched) {
         await AuthService.getcsrf()
-        setCsrfTokenFetched(true); // Mark CSRF token as fetched
+        setCsrfTokenFetched(true);
       }
 
       const response = await AuthService.signup(name, email, password, setErrors)
 
-      if (!response?.success) {
+      if (!response.success) {
         throw new Error("Error signing up.")
       }
 
       sessionStorage.setItem("access_token", response.data.access_token)
       sessionStorage.setItem("token_type", response.data.token_type)
+
       navigate("/home")
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.response)
     }
   }
-
 
   return (
     <>

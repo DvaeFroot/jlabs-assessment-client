@@ -2,11 +2,12 @@ import { useNavigate } from "react-router";
 import * as AuthService from "~/services/authService";
 import { useEffect, useState } from "react";
 
-export default function Home() {
-  const navigate = useNavigate();
+export default function Home(): React.ReactElement {
   const [userData, setUserData] = useState<any>(null);
 
-  useEffect(() => {
+  const navigate = useNavigate();
+
+  useEffect((): void => {
     const tokenType = sessionStorage.getItem("token_type");
     const accessToken = sessionStorage.getItem("access_token");
 
@@ -15,7 +16,7 @@ export default function Home() {
       return;
     }
 
-    const fetchUser = async () => {
+    const fetchUser = async (): Promise<void> => {
       try {
         const user = await AuthService.getUser(tokenType, accessToken);
         setUserData(user.data);
@@ -34,7 +35,7 @@ export default function Home() {
 
   const { name, email } = userData;
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     const tokenType = sessionStorage.getItem("token_type");
     const accessToken = sessionStorage.getItem("access_token");
 
@@ -60,12 +61,16 @@ export default function Home() {
         <div className="bg-gray-300 w-[350px] px-5 py-5 rounded-md drop-shadow-2xl">
           {/* USER DETAILS */}
           <div>
-            <h2>{name}</h2>
-            <p>{email}</p>
+            <div>
+              <b>Name: </b><h2>{name}</h2>
+            </div>
+            <div className="mt-2">
+              <b>Email: </b><p>{email}</p>
+            </div>
           </div>
 
           {/* LOGOUT BUTTON */}
-          <div>
+          <div className="mt-2">
             <button
               type="button"
               onClick={handleLogout}

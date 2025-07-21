@@ -7,11 +7,11 @@ type FormError = {
   pass?: string
 }
 
-export default function Login() {
+export default function Login(): React.ReactElement {
   const [email, setEmail] = useState<string>("")
   const [password, setPass] = useState<string>("")
-
   const [errors, setErrors] = useState<FormError>({})
+  const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
 
   let navigate = useNavigate()
 
@@ -22,10 +22,8 @@ export default function Login() {
     setPass(e.target.value)
   }
 
-  const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
-
-  const validateForm = () => {
-    const validationErrors: { name?: string, email?: string, pass?: string } = {}
+  const validateForm = (): FormError => {
+    const validationErrors: FormError = {}
 
     if (!email) {
       validationErrors.email = "Email is required."
@@ -41,8 +39,7 @@ export default function Login() {
     return validationErrors
   }
 
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
     const validationErrors = validateForm();
@@ -55,9 +52,9 @@ export default function Login() {
     try {
       if (!csrfTokenFetched) {
         await AuthService.getcsrf()
-        setCsrfTokenFetched(true); // Mark CSRF token as fetched
+        setCsrfTokenFetched(true);
       }
-      const validationErrors = validateForm();
+
       const response = await AuthService.login(email, password, setErrors)
 
       if (!response?.success) {
@@ -68,7 +65,6 @@ export default function Login() {
       sessionStorage.setItem("token_type", response.data.token_type)
 
       navigate("/home")
-
     } catch (error) {
       console.log(error)
     }
