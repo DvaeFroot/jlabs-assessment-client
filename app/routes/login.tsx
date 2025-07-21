@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { NavLink, useNavigate } from "react-router"
 import * as AuthService from "~/services/authService"
 
 type FormError = {
   email?: string,
   pass?: string
+  authenticated?: string
 }
 
 export default function Login(): React.ReactElement {
@@ -12,8 +13,37 @@ export default function Login(): React.ReactElement {
   const [password, setPass] = useState<string>("")
   const [errors, setErrors] = useState<FormError>({})
   const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
+  const [hasUser, setHasUser] = useState<any>(true);
 
   let navigate = useNavigate()
+
+  useEffect((): void => {
+    const tokenType = sessionStorage.getItem("token_type");
+    const accessToken = sessionStorage.getItem("access_token");
+
+    if (!tokenType || !accessToken) {
+      setHasUser(false)
+      return;
+    }
+
+    const fetchUser = async (): Promise<void> => {
+      try {
+        const user = await AuthService.getUser(tokenType, accessToken);
+        navigate("/home");
+      } catch (error) {
+        console.log("Error fetching user data:", error);
+        setHasUser(false)
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
+
+  if (hasUser) {
+    return <div>
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-500">
+        Loading...</div></div>;
+  }
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setEmail(e.target.value)
@@ -66,6 +96,9 @@ export default function Login(): React.ReactElement {
 
       navigate("/home")
     } catch (error) {
+      const validationErrors: FormError = {}
+      validationErrors.authenticated = "Incorrect password or email."
+      setErrors(validationErrors)
       console.log(error)
     }
   }
@@ -101,6 +134,8 @@ export default function Login(): React.ReactElement {
               </div>
             </div>
           </div>
+
+          {errors.authenticated && <div className="mt-2 text-sm text-red-500">{errors.authenticated}</div>}
 
           {/* Login */}
           <div className="mt-5 flex flex-row-reverse">

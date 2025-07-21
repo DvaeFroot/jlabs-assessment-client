@@ -31,7 +31,7 @@ const signup = async (name: string, email: string, password: string, updateError
       data: response.data,
     };
   } catch (error: any) {
-    updateErrors(error)
+    updateErrors(error.response.data.errors)
     return handleError(error);
   }
 };
@@ -47,7 +47,7 @@ const login = async (email: string, password: string, updateErrors: CallableFunc
       data: response.data,
     };
   } catch (error: any) {
-    updateErrors(error)
+    updateErrors(error.response.data.errors)
     return handleError(error);
   }
 };

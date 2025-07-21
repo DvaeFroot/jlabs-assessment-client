@@ -30,7 +30,11 @@ export default function Home(): React.ReactElement {
   }, [navigate]);
 
   if (!userData) {
-    return <div>Loading...</div>;
+    return <div>
+      <div className="bg-gray-500 h-screen w-screen flex items-center justify-center">
+        Loading...
+      </div>
+    </div>;
   }
 
   const { name, email } = userData;
@@ -46,8 +50,7 @@ export default function Home(): React.ReactElement {
 
     try {
       await AuthService.logout(tokenType, accessToken);
-      sessionStorage.removeItem("token_type");
-      sessionStorage.removeItem("access_token");
+      sessionStorage.clear()
       navigate("/login");
     } catch (error) {
       console.log("Logout error:", error);

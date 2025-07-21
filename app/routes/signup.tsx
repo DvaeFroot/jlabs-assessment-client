@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { NavLink, useNavigate } from "react-router"
 import * as AuthService from "~/services/authService"
 
@@ -14,8 +14,41 @@ export default function Signup() {
   const [password, setPass] = useState<string>("")
   const [csrfTokenFetched, setCsrfTokenFetched] = useState<boolean>(false);
   const [errors, setErrors] = useState<FormError>({})
+  const [hasUser, setHasUser] = useState<any>(true);
 
   let navigate = useNavigate()
+
+  useEffect((): void => {
+    const tokenType = sessionStorage.getItem("token_type");
+    const accessToken = sessionStorage.getItem("access_token");
+
+    if (!tokenType || !accessToken) {
+      setHasUser(false)
+      return;
+    }
+
+    const fetchUser = async (): Promise<void> => {
+      try {
+        const user = await AuthService.getUser(tokenType, accessToken);
+        navigate("/home");
+      } catch (error) {
+        console.log("Error fetching user data:", error);
+        setHasUser(false)
+      }
+    };
+
+    fetchUser();
+  }, [navigate]);
+
+  if (hasUser) {
+    return (
+      <div>
+        <div className="flex h-screen w-screen items-center justify-center bg-gray-500">
+          Loading...
+        </div>
+      </div>
+    )
+  }
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setName(e.target.value)
